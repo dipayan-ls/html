@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DD's Website</title>
+  
+  <!-- Google Tag Manager -->
+  <script>
+    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-KTBRQV9J');
+  </script>
+  <!-- End Google Tag Manager -->
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-37J6437QWM"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-37J6437QWM');
+  </script>
+
+  <!-- Base Domain Extraction -->
+  <script>
+    function getBaseDomainFromCurrentOrigin() {
+      try {
+        const origin = window.location.origin;
+        const url = new URL(origin);
+        const hostParts = url.hostname.split(".");
+        let keep = 2;
+        if (
+          hostParts.length > 2 &&
+          hostParts.at(-1).length === 2 &&
+          hostParts.at(-2).length <= 3
+        ) {
+          keep = 3;
+        }
+        return hostParts.slice(-keep).join(".");
+      } catch (e) {
+        console.error("Failed to extract base domain:", e);
+        return null;
+      }
+    }
+
+    (function () {
+      const baseDomain = getBaseDomainFromCurrentOrigin();
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        event: "Pageview",
+        baseDomain: baseDomain,
+        pagePath: window.location.href,
+        pageTitle: 'TestEvent',
+        visitorType: 'customer'
+      });
+      console.log("Pageview event pushed with baseDomain:", baseDomain);
+    })();
+  </script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f9fb;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1, h2 {
+      color: #2a5d84;
+    }
+
+    form {
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 500px;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 15px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #2a5d84;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background-color: #1e4764;
+    }
+
+    footer {
+      margin-top: 40px;
+      font-size: 14px;
+      color: #666;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KTBRQV9J"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+  <h1>Welcome!</h1>
+  <p>View the <a href="https://docs.lifesight.io/docs/javascript-sdk" target="_blank">Lifesight JS SDK Docs</a>.</p>
+
+  <h2>User Details Form</h2>
+  <form id="userForm">
+    <label for="fullName">Full Name:
+      <input type="text" id="fullName" required />
+    </label>
+
+    <label for="email">Email Address:
+      <input type="email" id="email" required />
+    </label>
+
+    <label for="mobile">Mobile Number:
+      <input type="tel" id="mobile" required />
+    </label>
+
+    <label for="city">City:
+      <input type="text" id="city" required />
+    </label>
+
+    <label for="amount">Amount:
+      <input type="number" id="amount" required />
+    </label>
+
+    <button type="submit">Submit</button>
+  </form>
+
+  <footer>
+    <p>Author: DD</p>
+    <p>Want to learn more HTML/CSS? Visit <a href="https://neocities.org/tutorials" target="_blank">these tutorials</a>.</p>
+  </footer>
+
+  <!-- SHA256 Hash Helper + Submission Logic -->
+  <script>
+    async function sha256Hash(input) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(input);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    document.getElementById('userForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const name = document.getElementById('fullName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const mobile = document.getElementById('mobile').value.trim();
+      const city = document.getElementById('city').value.trim();
+      const amount = document.getElementById('amount').value.trim();
+
+      const hashedEmail = await sha256Hash(email.toLowerCase());
+      const hashedMobile = await sha256Hash(mobile);
+
+      const formData = {
+        event: "formSubmission",
+        name: name,
+        email_id: hashedEmail,
+        mobile_number: hashedMobile,
+        city: city,
+        amount: amount
+      };
+
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push(formData);
+
+      alert("Form submitted successfully!");
+      console.log("Data pushed to dataLayer:", formData);
+    });
+  </script>
+</body>
+</html>
