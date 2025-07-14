@@ -1,199 +1,501 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>DD's Website</title>
-  
-  <!-- Google Tag Manager -->
-  <script>
-    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-KTBRQV9J');
-  </script>
-  <!-- End Google Tag Manager -->
-
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-37J6437QWM"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-37J6437QWM');
-  </script>
-
-  <!-- Base Domain Extraction -->
-  <script>
-    function getBaseDomainFromCurrentOrigin() {
-      try {
-        const origin = window.location.origin;
-        const url = new URL(origin);
-        const hostParts = url.hostname.split(".");
-        let keep = 2;
-        if (
-          hostParts.length > 2 &&
-          hostParts.at(-1).length === 2 &&
-          hostParts.at(-2).length <= 3
-        ) {
-          keep = 3;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive API Design Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Calm Neutrals (Grays, Slates, with Teal accent) -->
+    <!-- Application Structure Plan: A single-page app with persistent side navigation for discoverability. The core is an interactive API explorer linked to visual workflow diagrams. Users can click a workflow step (e.g., 'Accept Ride') and be shown the exact API endpoint (`POST /rides/{id}/accept`) that powers it. This task-oriented linkage makes the abstract API design concrete and easier to understand than a static document. A final chart simulation adds a dynamic data visualization element. -->
+    <!-- Visualization & Content Choices: Data Models -> Inform -> Styled code blocks -> Clarity. API Endpoints -> Organize/Inform -> Interactive list with details-on-click -> Reduces clutter, user-led exploration. Workflows -> Explain Process -> HTML/CSS flow diagrams -> Visualizes sequence; Interaction: Click-to-highlight endpoint -> Connects process to implementation; Method: JS/HTML. Ride Status -> Compare -> Bar Chart -> Visualizes data distribution; Interaction: Simulation button -> Demonstrates dynamic nature; Library: Chart.js. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
         }
-        return hostParts.slice(-keep).join(".");
-      } catch (e) {
-        console.error("Failed to extract base domain:", e);
-        return null;
-      }
-    }
-
-    (function () {
-      const baseDomain = getBaseDomainFromCurrentOrigin();
-      window.dataLayer = window.dataLayer || [];
-      window.dataLayer.push({
-        event: "Pageview",
-        baseDomain: baseDomain,
-        pagePath: window.location.href,
-        pageTitle: 'TestEvent',
-        visitorType: 'customer'
-      });
-      console.log("Pageview event pushed with baseDomain:", baseDomain);
-    })();
-  </script>
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f9fb;
-      color: #333;
-      margin: 0;
-      padding: 20px;
-    }
-
-    h1, h2 {
-      color: #2a5d84;
-    }
-
-    form {
-      background-color: #ffffff;
-      padding: 20px;
-      border-radius: 12px;
-      max-width: 500px;
-      box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
-    }
-
-    label {
-      display: block;
-      margin-bottom: 15px;
-      font-weight: bold;
-    }
-
-    input {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      box-sizing: border-box;
-    }
-
-    button {
-      background-color: #2a5d84;
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-
-    button:hover {
-      background-color: #1e4764;
-    }
-
-    footer {
-      margin-top: 40px;
-      font-size: 14px;
-      color: #666;
-    }
-  </style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code&display=swap');
+        .font-fira-code {
+            font-family: 'Fira Code', monospace;
+        }
+        .highlight-animation {
+            animation: highlight 2s ease-out;
+        }
+        @keyframes highlight {
+            0% { background-color: rgba(20, 184, 166, 0.3); }
+            100% { background-color: transparent; }
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+         @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+    </style>
 </head>
+<body class="bg-slate-50 text-slate-800">
 
-<body>
+    <div class="flex min-h-screen">
+        <aside class="w-64 bg-white border-r border-slate-200 p-6 fixed top-0 left-0 h-full hidden lg:block">
+            <h1 class="text-xl font-bold text-slate-900">API Explorer</h1>
+            <p class="text-sm text-slate-500 mt-1">Ride-Sharing Service</p>
+            <nav id="desktop-nav" class="mt-8 space-y-2">
+                <a href="#overview" class="flex items-center px-4 py-2 text-slate-700 rounded-lg hover:bg-teal-50 hover:text-teal-700 transition-colors">
+                    <span class="mr-3">📄</span> Overview
+                </a>
+                <a href="#models" class="flex items-center px-4 py-2 text-slate-700 rounded-lg hover:bg-teal-50 hover:text-teal-700 transition-colors">
+                    <span class="mr-3">📦</span> Data Models
+                </a>
+                <a href="#endpoints" class="flex items-center px-4 py-2 text-slate-700 rounded-lg hover:bg-teal-50 hover:text-teal-700 transition-colors">
+                    <span class="mr-3">🔗</span> API Endpoints
+                </a>
+                <a href="#workflows" class="flex items-center px-4 py-2 text-slate-700 rounded-lg hover:bg-teal-50 hover:text-teal-700 transition-colors">
+                    <span class="mr-3">⚙️</span> Workflows
+                </a>
+                <a href="#simulation" class="flex items-center px-4 py-2 text-slate-700 rounded-lg hover:bg-teal-50 hover:text-teal-700 transition-colors">
+                    <span class="mr-3">📊</span> Simulation
+                </a>
+            </nav>
+     </aside>
 
-  <!-- Google Tag Manager (noscript) -->
-  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KTBRQV9J"
-  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+        <main class="flex-1 lg:ml-64 p-4 md:p-8">
+            <header class="lg:hidden mb-6">
+                 <h1 class="text-2xl font-bold text-slate-900">API Explorer</h1>
+                 <p class="text-md text-slate-500">Ride-Sharing Service</p>
+            </header>
 
-  <h1>Welcome!</h1>
-  <p>View the <a href="https://docs.lifesight.io/docs/javascript-sdk" target="_blank">Lifesight JS SDK Docs</a>.</p>
+            <section id="overview" class="mb-12 bg-white p-8 rounded-xl shadow-sm">
+                <h2 class="text-3xl font-bold text-slate-900 mb-4">API Design Overview</h2>
+                <p class="text-slate-600 leading-relaxed">
+                    This interactive document presents the RESTful API design for a modern ride-sharing application. It provides a comprehensive guide to the data structures, endpoints, and core operational flows required to build a service like Uber or Lyft. The goal is to offer a clear, explorable, and practical blueprint for developers. Use the navigation to explore the different components of the API, from the fundamental data models to the step-by-step user workflows. Each section is designed to build upon the last, creating a complete picture of the system's architecture.
+                </p>
+            </section>
 
-  <h2>User Details Form</h2>
-  <form id="userForm">
-    <label for="fullName">Full Name:
-      <input type="text" id="fullName" required />
-    </label>
+            <section id="models" class="mb-12">
+                <h2 class="text-3xl font-bold text-slate-900 mb-6">Data Models</h2>
+                 <p class="text-slate-600 leading-relaxed mb-8 max-w-4xl">The foundation of the API is built on four core data models: User, Ride, Location, and Payment. These models represent the primary entities within the system. Below are the JSON structures for each, illustrating the key fields and their relationships. Understanding these models is the first step to interacting with the API.</p>
+                <div id="models-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                </div>
+            </section>
 
-    <label for="email">Email Address:
-      <input type="email" id="email" required />
-    </label>
+            <section id="endpoints" class="mb-12">
+                <h2 class="text-3xl font-bold text-slate-900 mb-6">API Endpoints Explorer</h2>
+                 <p class="text-slate-600 leading-relaxed mb-8 max-w-4xl">This section provides a complete, interactive reference for all API endpoints. The endpoints are grouped by their functional area. Click on a specific endpoint from the list on the left to view its detailed information, including the HTTP method, URI path, and description. This explorer is the central reference for all API interactions.</p>
+                <div class="flex flex-col md:flex-row gap-8">
+                    <div id="endpoint-list-container" class="w-full md:w-1/3 bg-white p-4 rounded-xl shadow-sm">
+                    </div>
+                    <div id="endpoint-detail-container" class="w-full md:w-2/3 bg-white p-6 rounded-xl shadow-sm min-h-[300px]">
+                        <p class="text-slate-500 text-center mt-20">Select an endpoint to see details here.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="workflows" class="mb-12">
+                <h2 class="text-3xl font-bold text-slate-900 mb-6">Interactive Workflows</h2>
+                <p class="text-slate-600 leading-relaxed mb-8 max-w-4xl">Workflows illustrate the sequence of API calls for common user actions. The diagrams below show the step-by-step processes for a rider requesting a trip and a driver completing one. <strong class="text-teal-600">Click on any step in a workflow</strong> to jump to its corresponding entry in the API Endpoints Explorer above, connecting the process flow directly to the technical implementation.</p>
 
-    <label for="mobile">Mobile Number:
-      <input type="tel" id="mobile" required />
-    </label>
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <h3 class="text-2xl font-semibold mb-6 text-center">Rider Workflow</h3>
+                        <div id="rider-workflow" class="space-y-4"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <h3 class="text-2xl font-semibold mb-6 text-center">Driver Workflow</h3>
+                        <div id="driver-workflow" class="space-y-4"></div>
+                    </div>
+                </div>
+            </section>
 
-    <label for="city">City:
-      <input type="text" id="city" required />
-    </label>
+            <section id="simulation" class="mb-12">
+                <h2 class="text-3xl font-bold text-slate-900 mb-6">Ride Status Simulation</h2>
+                <p class="text-slate-600 leading-relaxed mb-8 max-w-4xl">This visualization represents the current distribution of all rides in the system by their status. The chart is dynamic and can be updated to simulate the system under load. Use the button below to simulate new rides being requested and completed, and watch how the distribution changes in real-time. This provides insight into the lifecycle of the `Ride` data model.</p>
+                <div class="bg-white p-6 rounded-xl shadow-sm">
+                     <div class="chart-container">
+                        <canvas id="rideStatusChart"></canvas>
+                    </div>
+                    <div class="text-center mt-6">
+                        <button id="simulate-rides-btn" class="bg-teal-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-teal-600 transition-colors">
+                            Simulate 10 New Rides
+                        </button>
+                    </div>
+                </div>
+            </section>
 
-    <label for="amount">Amount:
-      <input type="number" id="amount" required />
-    </label>
+        </main>
+    </div>
 
-    <button type="submit">Submit</button>
-  </form>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
 
-  <footer>
-    <p>Author: DD</p>
-    <p>Want to learn more HTML/CSS? Visit <a href="https://neocities.org/tutorials" target="_blank">these tutorials</a>.</p>
-  </footer>
+    const appData = {
+        models: [
+            {
+                name: "User",
+                description: "Represents both riders and drivers, distinguished by the `userType` field.",
+                json: `{
+  "userId": "user-uuid-123",
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.doe@example.com",
+  "userType": "rider",
+  "rating": 4.85,
+  "driverDetails": {
+    "licensePlate": "ABC-1234",
+    "vehicleModel": "Toyota Prius",
+    "driverStatus": "available"
+  }
+}`
+            },
+            {
+                name: "Ride",
+                description: "Represents a single trip from a pickup location to a destination.",
+                json: `{
+  "rideId": "ride-uuid-456",
+  "riderId": "user-uuid-123",
+  "driverId": "user-uuid-789",
+  "pickupLocation": { ... },
+  "destination": { ... },
+  "status": "pending",
+  "fare": 25.50,
+  "requestedAt": "2023-10-27T11:00:00Z"
+}`
+            },
+            {
+                name: "Location",
+                description: "A simple geo-coordinate model used within other resources.",
+                json: `{
+  "latitude": 34.0522,
+  "longitude": -118.2437,
+  "address": "123 Main St, LA"
+}`
+            },
+            {
+                name: "Payment",
+                description: "Represents a transaction for a ride, linking users and rides.",
+                json: `{
+  "paymentId": "payment-uuid-abc",
+  "rideId": "ride-uuid-456",
+  "userId": "user-uuid-123",
+  "amount": 25.50,
+  "status": "succeeded"
+}`
+            }
+        ],
+        endpoints: [
+            { 
+                id: "registerUser",
+                category: "Users & Authentication",
+                method: "POST",
+                path: "/api/v1/users/register",
+                description: "Register a new user (rider or driver)."
+            },
+            {
+                id: "loginUser",
+                category: "Users & Authentication",
+                method: "POST",
+                path: "/api/v1/users/login",
+                description: "Authenticate a user and return a JWT."
+            },
+            {
+                id: "getUser",
+                category: "Users & Authentication",
+                method: "GET",
+                path: "/api/v1/users/{userId}",
+                description: "Get a user's public profile."
+            },
+            {
+                id: "updateUser",
+                category: "Users & Authentication",
+                method: "PUT",
+                path: "/api/v1/users/{userId}",
+                description: "Update a user's profile information."
+            },
+            {
+                id: "updateDriverStatus",
+                category: "Users & Authentication",
+                method: "PUT",
+                path: "/api/v1/drivers/{driverId}/status",
+                description: "Update driver status (e.g., 'available', 'offline')."
+            },
+            {
+                id: "updateDriverLocation",
+                category: "Users & Authentication",
+                method: "PUT",
+                path: "/api/v1/drivers/{driverId}/location",
+                description: "Update driver's current location (typically via WebSocket)."
+            },
+            {
+                id: "requestRide",
+                category: "Ride Workflow",
+                method: "POST",
+                path: "/api/v1/rides",
+                description: "A rider requests a new ride from a pickup point to a destination."
+            },
+            {
+                id: "getRideStatus",
+                category: "Ride Workflow",
+                method: "GET",
+                path: "/api/v1/rides/{rideId}",
+                description: "Get the current status and details of a specific ride."
+            },
+            {
+                id: "cancelRide",
+                category: "Ride Workflow",
+                method: "POST",
+                path: "/api/v1/rides/{rideId}/cancel",
+                description: "A rider or driver cancels an active ride request."
+            },
+            {
+                id: "getAvailableRides",
+                category: "Ride Workflow",
+                method: "GET",
+                path: "/api/v1/rides/requests?lat=...&lon=...",
+                description: "A driver fetches a list of available ride requests nearby."
+            },
+            {
+                id: "acceptRide",
+                category: "Ride Workflow",
+                method: "POST",
+                path: "/api/v1/rides/{rideId}/accept",
+                description: "A driver accepts a pending ride request."
+            },
+            {
+                id: "updateRideStatus",
+                category: "Ride Workflow",
+                method: "PUT",
+                path: "/api/v1/rides/{rideId}/status",
+                description: "A driver updates the ride's progress (e.g., 'in_progress', 'completed')."
+            },
+            {
+                id: "addPaymentMethod",
+                category: "Payments & History",
+                method: "POST",
+                path: "/api/v1/users/{userId}/payment-methods",
+                description: "Add a new payment method for a user."
+            },
+            {
+                id: "getRideHistory",
+                category: "Payments & History",
+                method: "GET",
+                path: "/api/v1/users/{userId}/rides",
+                description: "Get a user's past ride history."
+            },
+            {
+                id: "submitRating",
+                category: "Ratings & Reviews",
+                method: "POST",
+                path: "/api/v1/rides/{rideId}/ratings",
+                description: "Submit a rating for a rider or driver after a ride."
+            }
+        ],
+        workflows: {
+            rider: [
+                { step: "1. Request a Ride", endpointId: "requestRide" },
+                { step: "2. Poll for Ride Status", endpointId: "getRideStatus" },
+                { step: "3. Trip is In Progress", endpointId: "getRideStatus" },
+                { step: "4. Trip Completed", endpointId: "getRideStatus" },
+                { step: "5. Submit Rating", endpointId: "submitRating" },
+                { step: "Optional: Cancel Ride", endpointId: "cancelRide" }
+            ],
+            driver: [
+                { step: "1. Set Status to Available", endpointId: "updateDriverStatus" },
+                { step: "2. Get Available Rides", endpointId: "getAvailableRides" },
+                { step: "3. Accept a Ride", endpointId: "acceptRide" },
+                { step: "4. Update Status to 'In Progress'", endpointId: "updateRideStatus" },
+                { step: "5. Update Status to 'Completed'", endpointId: "updateRideStatus" },
+                { step: "6. Get Paid (handled by system)" },
+                { step: "7. Submit Rating", endpointId: "submitRating" }
+            ]
+        }
+    };
 
-  <!-- SHA256 Hash Helper + Submission Logic -->
-  <script>
-    async function sha256Hash(input) {
-      const encoder = new TextEncoder();
-      const data = encoder.encode(input);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    const modelsGrid = document.getElementById('models-grid');
+    appData.models.forEach(model => {
+        const card = document.createElement('div');
+        card.className = "bg-white rounded-xl shadow-sm overflow-hidden";
+        card.innerHTML = `
+            <div class="p-6">
+                <h3 class="text-xl font-bold text-slate-900">${model.name}</h3>
+                <p class="text-slate-600 mt-1">${model.description}</p>
+            </div>
+            <div class="bg-slate-800 p-4">
+                <pre><code class="language-json text-sm text-slate-300 font-fira-code">${model.json}</code></pre>
+            </div>
+        `;
+        modelsGrid.appendChild(card);
+    });
+
+    const endpointListContainer = document.getElementById('endpoint-list-container');
+    const endpointDetailContainer = document.getElementById('endpoint-detail-container');
+    const categories = [...new Set(appData.endpoints.map(e => e.category))];
+
+    categories.forEach(category => {
+        const categoryWrapper = document.createElement('div');
+        categoryWrapper.className = 'mb-6';
+        const categoryTitle = document.createElement('h3');
+        categoryTitle.className = 'text-lg font-semibold text-slate-900 mb-3';
+        categoryTitle.textContent = category;
+        categoryWrapper.appendChild(categoryTitle);
+
+        const list = document.createElement('ul');
+        list.className = 'space-y-1';
+        appData.endpoints.filter(e => e.category === category).forEach(endpoint => {
+            const listItem = document.createElement('li');
+            listItem.innerHTML = `
+                <a href="#" class="flex items-center p-2 rounded-md hover:bg-slate-100 transition-colors" data-endpoint-id="${endpoint.id}">
+                    <span class="text-xs font-bold w-16 text-center py-1 rounded-md ${
+                        {POST: 'bg-green-100 text-green-800', GET: 'bg-sky-100 text-sky-800', PUT: 'bg-amber-100 text-amber-800'}[endpoint.method]
+                    }">${endpoint.method}</span>
+                    <span class="ml-3 text-sm text-slate-700 font-fira-code">${endpoint.path}</span>
+                </a>
+            `;
+            list.appendChild(listItem);
+        });
+        categoryWrapper.appendChild(list);
+        endpointListContainer.appendChild(categoryWrapper);
+    });
+    
+    endpointListContainer.addEventListener('click', function(e) {
+        e.preventDefault();
+        const link = e.target.closest('a[data-endpoint-id]');
+        if (link) {
+            const endpointId = link.dataset.endpointId;
+            const endpoint = appData.endpoints.find(ep => ep.id === endpointId);
+
+            document.querySelectorAll('#endpoint-list-container a').forEach(a => a.classList.remove('bg-teal-50'));
+            link.classList.add('bg-teal-50');
+
+            if (endpoint) {
+                endpointDetailContainer.innerHTML = `
+                    <div class="flex items-center mb-4">
+                        <span class="text-sm font-bold w-20 text-center py-1.5 rounded-md ${
+                            {POST: 'bg-green-100 text-green-800', GET: 'bg-sky-100 text-sky-800', PUT: 'bg-amber-100 text-amber-800'}[endpoint.method]
+                        }">${endpoint.method}</span>
+                        <h3 class="ml-4 text-xl font-mono text-slate-800">${endpoint.path}</h3>
+                    </div>
+                    <p class="text-slate-600 leading-relaxed">${endpoint.description}</p>
+                `;
+            }
+        }
+    });
+
+    function createWorkflow(containerId, workflowData) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+        workflowData.forEach((item, index) => {
+            const stepEl = document.createElement('div');
+            stepEl.className = 'flex items-center';
+            stepEl.innerHTML = `
+                <div class="flex-grow ${item.endpointId ? 'cursor-pointer hover:bg-slate-100' : ''} border-2 border-slate-200 p-3 rounded-lg" data-endpoint-id="${item.endpointId || ''}">
+                    <p class="text-slate-800">${item.step}</p>
+                </div>
+            `;
+            container.appendChild(stepEl);
+
+            if (index < workflowData.length - 1) {
+                const arrow = document.createElement('div');
+                arrow.className = 'text-center text-slate-400 my-2';
+                arrow.innerHTML = '↓';
+                container.appendChild(arrow);
+            }
+        });
     }
 
-    document.getElementById('userForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
-
-      const name = document.getElementById('fullName').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const mobile = document.getElementById('mobile').value.trim();
-      const city = document.getElementById('city').value.trim();
-      const amount = document.getElementById('amount').value.trim();
-
-      const hashedEmail = await sha256Hash(email.toLowerCase());
-      const hashedMobile = await sha256Hash(mobile);
-
-      const formData = {
-        event: "formSubmission",
-        name: name,
-        email_id: hashedEmail,
-        mobile_number: hashedMobile,
-        city: city,
-        amount: amount
-      };
-
-      window.dataLayer = window.dataLayer || [];
-      window.dataLayer.push(formData);
-
-      alert("Form submitted successfully!");
-      console.log("Data pushed to dataLayer:", formData);
+    createWorkflow('rider-workflow', appData.workflows.rider);
+    createWorkflow('driver-workflow', appData.workflows.driver);
+    
+    document.getElementById('workflows').addEventListener('click', function(e) {
+        const step = e.target.closest('[data-endpoint-id]');
+        if (step && step.dataset.endpointId) {
+            const endpointId = step.dataset.endpointId;
+            const targetEndpointLink = document.querySelector(`#endpoint-list-container a[data-endpoint-id="${endpointId}"]`);
+            if (targetEndpointLink) {
+                targetEndpointLink.click();
+                
+                const targetDetailView = document.getElementById('endpoint-detail-container');
+                targetDetailView.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                targetDetailView.classList.remove('highlight-animation');
+                void targetDetailView.offsetWidth;
+                targetDetailView.classList.add('highlight-animation');
+            }
+        }
     });
-  </script>
+
+    let rideStatusChart;
+    const chartCanvas = document.getElementById('rideStatusChart').getContext('2d');
+    const chartData = {
+        labels: ["Pending", "Accepted", "In Progress", "Completed", "Cancelled"],
+        datasets: [{
+            label: '# of Rides',
+            data: [12, 19, 8, 35, 5],
+            backgroundColor: [
+                'rgba(251, 191, 36, 0.6)',
+                'rgba(56, 189, 248, 0.6)',
+                'rgba(249, 115, 22, 0.6)',
+                'rgba(16, 185, 129, 0.6)',
+                'rgba(239, 68, 68, 0.6)',
+            ],
+            borderColor: [
+                'rgba(251, 191, 36, 1)',
+                'rgba(56, 189, 248, 1)',
+                'rgba(249, 115, 22, 1)',
+                'rgba(16, 185, 129, 1)',
+                'rgba(239, 68, 68, 1)',
+            ],
+            borderWidth: 1
+        }]
+    };
+
+    function renderChart() {
+         if (rideStatusChart) {
+            rideStatusChart.destroy();
+        }
+        rideStatusChart = new Chart(chartCanvas, {
+            type: 'bar',
+            data: chartData,
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        titleFont: { size: 14, weight: 'bold' },
+                        bodyFont: { size: 12 },
+                        padding: 10,
+                        cornerRadius: 4
+                    }
+                }
+            }
+        });
+    }
+   
+    document.getElementById('simulate-rides-btn').addEventListener('click', function() {
+        for(let i = 0; i < 10; i++) {
+            const randomIndex = Math.floor(Math.random() * chartData.datasets[0].data.length);
+            chartData.datasets[0].data[randomIndex]++;
+        }
+        renderChart();
+    });
+
+    renderChart();
+});
+</script>
 </body>
 </html>
